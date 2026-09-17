@@ -1,0 +1,79 @@
+{
+  "protocol_id": "MEC_V1_4_REACHER_HIDDEN_FINAL_2026_08_30_R2",
+  "status": "FROZEN_BEFORE_HIDDEN_UNSEAL_R2",
+  "policy_freeze_protocol_id": "MEC_V1_4_FINAL_POLICY_FREEZE_2026_08_30_R2",
+  "environment": "Reacher-v5",
+  "hidden_world_model_seeds": [
+    781101,
+    781102,
+    781103,
+    781104,
+    781105,
+    781106,
+    781107,
+    781108
+  ],
+  "hidden_scenario_seed_roots": [
+    957101,
+    957107,
+    957109
+  ],
+  "hidden_groups_per_seed_root": 200,
+  "mechanism_classes_per_group": 7,
+  "steps": 40,
+  "scenario_seed_derivation": "uint32 SeedSequence([root, group, class_index])",
+  "balanced_per_class_per_root": true,
+  "policy": "load exact serialized final policy bundle; no fitting/calibration on hidden records",
+  "world_model_training": {
+    "nominal_data": "reuse frozen R2 nominal_train/calibration/test datasets",
+    "architecture": "Residual MLP 3x128 SiLU float32",
+    "epochs": 120,
+    "batch_size": 512,
+    "learning_rate": 0.002,
+    "weight_decay": 1e-05,
+    "checkpoint_every_epochs": 5
+  },
+  "primary_hidden_gates": {
+    "quality_models_required": 7,
+    "wrong_intervention_risk_max": 0.05,
+    "pure_coverage_min": 0.7,
+    "composite_or_ood_pure_commit_max": 0.05,
+    "composite_or_ood_safe_min": 0.95,
+    "hidden_world_model_primary_passes_required": 6,
+    "of_hidden_world_models": 8,
+    "median_hidden_wm_metrics_must_pass": true,
+    "pooled_metrics_must_pass": true,
+    "seed_stability_max_wms_wrong_risk_above_0_07": 1
+  },
+  "secondary_efficiency": {
+    "median_mec_to_random_cost_ratio_max": 0.85,
+    "hidden_wm_efficiency_passes_required": 6,
+    "efficiency_failure_does_not_override_primary": true
+  },
+  "scenario_seed_aggregates": "all three roots reported; pooled/WM gates control qualification",
+  "baselines": [
+    "MEC_VOI",
+    "RANDOM",
+    "DISCRIMINATION_HEURISTIC"
+  ],
+  "unseal_token": "YES_I_ACCEPT_FINAL_FROZEN_POLICY_AND_ONE_SHOT_HIDDEN",
+  "outcome_labels": {
+    "HIDDEN_PRIMARY_PASS_EFFICIENCY_PASS": "Reacher hidden final passes; proceed to statistics/reproduction/paper freeze.",
+    "HIDDEN_PRIMARY_PASS_EFFICIENCY_FAIL": "Reacher hidden primary passes; efficiency superiority claim removed.",
+    "HIDDEN_PRIMARY_FAIL": "Hidden final fails. Hidden seeds are permanently spent and cannot be reused for tuning."
+  },
+  "prohibited": [
+    "hidden threshold fitting",
+    "hidden head/VOI fitting",
+    "changing policy bundle",
+    "dropping hidden WMs/seeds after unseal",
+    "post-hoc gate relaxation",
+    "reusing these hidden seeds as hidden after inspection"
+  ],
+  "pre_hidden_finalizer_repair": {
+    "type": "NONFINAL_STAGE_FALLBACK_ALIGNMENT",
+    "hidden_data_used": false,
+    "thresholds_relaxed": false,
+    "evaluation_gates_changed": false
+  }
+}

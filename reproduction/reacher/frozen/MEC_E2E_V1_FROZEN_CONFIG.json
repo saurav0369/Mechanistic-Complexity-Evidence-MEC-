@@ -1,0 +1,369 @@
+{
+  "protocol_id": "MEC_E2E_V1_FROZEN_2026_08_24",
+  "status": "FROZEN_BEFORE_EXECUTION",
+  "freeze_date": "2026-08-24",
+  "purpose": "End-to-end learned-world-model mechanism diagnosis and intervention-readiness test",
+  "environments": [
+    {
+      "id": "Reacher-v5",
+      "role": "primary",
+      "state_interface": "actual single-system observed joint q, qdot, action; no paired nominal-system internals",
+      "train_transitions": 60000,
+      "calibration_transitions": 20000,
+      "nominal_test_transitions": 20000
+    },
+    {
+      "id": "InvertedDoublePendulum-v5",
+      "role": "confirmatory_cross_family",
+      "state_interface": "actual single-system observed generalized coordinates/velocities and action; no paired nominal-system internals",
+      "train_transitions": 80000,
+      "calibration_transitions": 20000,
+      "nominal_test_transitions": 20000
+    }
+  ],
+  "world_models": {
+    "count_per_environment": 8,
+    "seeds": [
+      681101,
+      681102,
+      681103,
+      681104,
+      681105,
+      681106,
+      681107,
+      681108
+    ],
+    "architecture": "Residual MLP, 3 hidden layers x 128, SiLU",
+    "target": "wrapped coordinate delta + velocity delta",
+    "epochs": 120,
+    "batch_size": 512,
+    "optimizer": "AdamW",
+    "learning_rate": 0.002,
+    "weight_decay": 1e-05,
+    "quality_gate": {
+      "models_required": 7,
+      "of": 8,
+      "aggregate_state_rmse_vs_persistence_ratio_max": 0.5,
+      "normalized_residual_target_mse_max": 0.25
+    }
+  },
+  "split_seeds": {
+    "nominal_train": 682001,
+    "calibration": 682002,
+    "development_baseline_fit": 682003,
+    "hidden_test": [
+      947213,
+      947227,
+      947261
+    ]
+  },
+  "hidden_test": {
+    "pure_fault_episodes_per_class_per_seed": 200,
+    "combined_or_oov_episodes_per_seed": 200,
+    "trajectory_length_reacher": 40,
+    "trajectory_length_inverted_double_pendulum": 80,
+    "randomized_factors": [
+      "initial pose",
+      "initial velocity",
+      "control trajectory",
+      "joint damping",
+      "body/link mass within declared train/test ranges",
+      "fault magnitude",
+      "fault sign",
+      "observation nuisance",
+      "actuator nuisance"
+    ],
+    "pure_fault_classes": [
+      "ENCODER_OFFSET",
+      "MECHANICAL_REFERENCE_SHIFT",
+      "DYNAMICS_DAMPING_FAULT",
+      "ACTUATOR_BIAS"
+    ],
+    "combined_oov_examples": [
+      "ENCODER_OFFSET + DYNAMICS_DAMPING_FAULT",
+      "MECHANICAL_REFERENCE_SHIFT + ACTUATOR_BIAS",
+      "outside-training-hull morphology"
+    ],
+    "generic_static_fault_direction": "uniform angle on [0,2pi)",
+    "development_and_hidden_parameter_ranges_identical_except_oov_morphology": true
+  },
+  "allowed_diagnostic_input": [
+    "residuals r_t = y_{t+1} - f_hat(y_t,u_t) from the evaluated learned world model",
+    "world-model predictive ensemble disagreement if available from independent seeds",
+    "declared physical reference measurements acquired by the diagnostic policy",
+    "actual actions and timestamps",
+    "calibration statistics frozen from nominal held-out residuals"
+  ],
+  "forbidden_diagnostic_input": [
+    "difference between a nominal MuJoCo instance and a faulty MuJoCo instance",
+    "true fault label",
+    "hidden MuJoCo model parameters",
+    "direct qacc difference between nominal and fault simulators",
+    "test-set-specific threshold tuning",
+    "analytic injected Gaussian noise as the sole evidence of empirical calibration"
+  ],
+  "evidence_stages": {
+    "E0": "passive same-channel learned-model residual history only",
+    "E1": "E0 + one rank-1 independent reference direction",
+    "E2": "E0 + full-rank independent reference for static mechanism split",
+    "D2": "learned-model residuals after two frozen diagnostic operating points",
+    "D3": "learned-model residuals after three affinely independent frozen diagnostic operating points"
+  },
+  "uncertainty": {
+    "primary": "empirical calibration from held-out nominal learned-model residuals",
+    "method": "split-conformal/selective threshold on intervention risk; covariance/whitening reported descriptively",
+    "gaussian_theory": "secondary diagnostic only; never used as empirical validation unless held-out residual diagnostics support it"
+  },
+  "actions": [
+    "RECALIBRATE_SENSOR",
+    "SERVICE_MECHANICAL_REFERENCE",
+    "SERVICE_DYNAMICS",
+    "SERVICE_ACTUATOR",
+    "ABSTAIN_ACQUIRE_MORE_EVIDENCE",
+    "ESCALATE_MULTI_OR_OOV"
+  ],
+  "baselines": [
+    "PASSIVE_RF_RESIDUAL_CLASSIFIER",
+    "PASSIVE_MLP_RESIDUAL_CLASSIFIER",
+    "RANDOM_PROBE_EQUAL_BUDGET",
+    "ACTIVE_MODEL_DISCRIMINATION_MAX_PREDICTIVE_SEPARATION",
+    "FULL_EVIDENCE_ORACLE_UPPER_BOUND"
+  ],
+  "primary_metrics": [
+    "wrong intervention risk among committed cases",
+    "commitment coverage",
+    "risk-coverage curve and AURC",
+    "correct intervention rate",
+    "mean diagnostic evidence/probe cost to safe commitment",
+    "combined/OOV abstention-or-escalation rate"
+  ],
+  "sealed_gates": {
+    "P0_world_model_quality": ">=7/8 models per environment meet both frozen quality thresholds",
+    "P1_static_below_threshold_ambiguity": "on matched encoder-vs-mechanical pure faults, best generic held-out classifier AUC <=0.65 under E0 and E1",
+    "P2_static_full_rank_resolution": "under E2, MEC/structured correct intervention >=0.90, wrong-intervention risk <=0.05, coverage >=0.80",
+    "P3_dynamic_below_threshold_ambiguity": "damping-vs-actuator-nuisance classifier AUC <=0.65 under D2",
+    "P4_dynamic_threshold_resolution": "under D3, correct intervention >=0.90, wrong-intervention risk <=0.05, coverage >=0.80",
+    "P5_selective_end_to_end": "on all pure hidden faults, MEC wrong-intervention risk <=0.05 at coverage >=0.70",
+    "P6_ood_safety": "combined/OOV wrong pure-intervention rate <=0.05 and abstain/escalate rate >=0.80",
+    "P7_evidence_efficiency": "at matched <=5% wrong-intervention risk, MEC uses <=0.85x mean diagnostic probe cost of RANDOM_PROBE_EQUAL_BUDGET; report comparison to active model discrimination without requiring superiority",
+    "P8_cross_family": "P2/P4/P5 directional conclusions hold in both environment families; if confirmatory environment fails, no cross-family robotics claim",
+    "P9_seed_stability": "no more than 1 of 8 world-model seeds may violate P5 by >2 percentage points; all three hidden-test seeds are reported",
+    "P10_no_posthoc": "all seeds, splits, thresholds, fault ranges, metrics and gates remain unchanged after first hidden unseal"
+  },
+  "decision_rule": {
+    "PASS_STRONG": "P0-P10 all true",
+    "PARTIAL_NARROW": "core theory-aligned structural gates pass but one or more generalization/baseline/safety gates fail; narrow paper to passed scope",
+    "FAIL_END_TO_END": "P1/P2/P3/P4/P5 fails materially; do not claim MEC works end-to-end for learned world models"
+  },
+  "reporting": {
+    "confidence_intervals": "paired bootstrap 95% CI over hidden scenarios, stratified by mechanism and model seed",
+    "must_report": [
+      "all hidden seeds",
+      "all 8 model seeds",
+      "all pure and combined/OOV classes",
+      "all baselines",
+      "failures and abstentions",
+      "per-environment and pooled results"
+    ],
+    "bootstrap_replicates": 5000,
+    "auc_ci": "DeLong or paired bootstrap; use paired bootstrap if implementation dependency unavailable"
+  },
+  "data_generation": {
+    "action_policy_train": "piecewise-constant random controls; segment length uniformly 1..5 steps",
+    "action_fraction_of_control_range_train": [
+      -0.8,
+      0.8
+    ],
+    "action_fraction_of_control_range_hidden": [
+      -1.0,
+      1.0
+    ],
+    "development_fault_episodes_per_class_per_environment": 120,
+    "development_combined_oov_episodes_per_environment": 120,
+    "development_seed": 682003
+  },
+  "fault_ranges": {
+    "encoder_offset_rad_abs": [
+      0.08,
+      0.25
+    ],
+    "mechanical_reference_shift_rad_abs": [
+      0.08,
+      0.25
+    ],
+    "damping_multiplier": [
+      1.5,
+      3.0
+    ],
+    "actuator_bias_fraction_of_ctrl_range_abs": [
+      0.08,
+      0.25
+    ],
+    "fault_sign": "independent symmetric +/- unless vector direction is explicitly constructed",
+    "static_threshold_pair": {
+      "E1_reference_direction": [
+        1.0,
+        0.0
+      ],
+      "matched_fault_direction": [
+        0.0,
+        1.0
+      ],
+      "E2_reference_matrix": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "adversarial threshold arm only; generic hidden static faults use uniformly random 2D direction"
+    },
+    "dynamic_threshold_points_reacher": {
+      "pose_q": [
+        0.15,
+        -0.22
+      ],
+      "velocity_points_D2": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.7,
+          0.0
+        ]
+      ],
+      "velocity_point_added_D3": [
+        0.0,
+        0.7
+      ],
+      "control": [
+        0.0,
+        0.0
+      ]
+    },
+    "dynamic_threshold_points_inverted_double_pendulum": {
+      "hinge_pose_q": [
+        0.05,
+        -0.05
+      ],
+      "hinge_velocity_points_D2": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.5,
+          0.0
+        ]
+      ],
+      "hinge_velocity_point_added_D3": [
+        0.0,
+        0.5
+      ],
+      "cart_state": "0 position, 0 velocity unless Gymnasium health constraints require epsilon-safe deterministic adjustment logged before any hidden fault labels are read",
+      "control": [
+        0.0
+      ]
+    }
+  },
+  "morphology_and_nuisance_ranges": {
+    "train_mass_multiplier": [
+      0.85,
+      1.15
+    ],
+    "hidden_in_hull_mass_multiplier": [
+      0.8,
+      1.2
+    ],
+    "hidden_oov_mass_multiplier_low": [
+      0.65,
+      0.75
+    ],
+    "hidden_oov_mass_multiplier_high": [
+      1.25,
+      1.4
+    ],
+    "train_nominal_damping_multiplier": [
+      0.9,
+      1.1
+    ],
+    "hidden_nominal_nuisance_damping_multiplier": [
+      0.85,
+      1.15
+    ],
+    "sensor_uniform_jitter_q_rad": [
+      -0.002,
+      0.002
+    ],
+    "sensor_uniform_jitter_qdot": [
+      -0.01,
+      0.01
+    ],
+    "note": "the same nuisance generator is present in nominal calibration data; Gaussian trial injection is not part of the primary E2E evaluation"
+  },
+  "diagnostic_method": {
+    "name": "MEC_SELECTIVE_V1",
+    "fit_data": "development fault set only; hidden seeds inaccessible until final evaluation",
+    "fault_detection_score": "whitened learned-world-model residual energy using nominal calibration residual covariance with ridge 1e-6",
+    "static_split": "use learned-model residual history for fault evidence plus declared independent reference measurement; full-rank reference supports mechanical-vs-encoder action split",
+    "dynamic_split": "fit centered affine residual model R(v)=A v+s from learned-model one-step residual summaries at frozen operating points; compare dynamics term ||A|| and intercept term ||s||",
+    "selective_commitment": "mechanism action score must be uniquely maximal and exceed a threshold selected on development/calibration data to target <=5% wrong-intervention risk; otherwise abstain/acquire evidence",
+    "threshold_selection": "choose smallest score threshold on development data whose one-sided Clopper-Pearson 95% upper bound on wrong-intervention risk is <=0.05; if none exists, always abstain for that stage",
+    "no_hidden_tuning": true
+  },
+  "baseline_hyperparameters": {
+    "RF": {
+      "n_estimators": 500,
+      "min_samples_leaf": [
+        2,
+        5,
+        10
+      ],
+      "max_features": [
+        "sqrt",
+        0.5
+      ]
+    },
+    "MLP": {
+      "hidden": [
+        [
+          128,
+          128
+        ],
+        [
+          256,
+          128
+        ]
+      ],
+      "dropout": [
+        0.0,
+        0.1
+      ],
+      "epochs": 100,
+      "early_stopping_patience": 10
+    },
+    "RANDOM_PROBE": {
+      "probe_budget": 3,
+      "seeds": [
+        701,
+        702,
+        703,
+        704,
+        705
+      ]
+    },
+    "ACTIVE_MODEL_DISCRIMINATION": {
+      "candidate_probe_pool_size": 64,
+      "probe_budget": 3,
+      "objective": "maximize minimum pairwise standardized separation between development-fitted mechanism residual predictors",
+      "optimizer": "enumerate frozen candidate pool; deterministic tie break by candidate index"
+    },
+    "ORACLE": {
+      "description": "full allowed evidence stages plus true sufficient evidence allocation; never receives true mechanism label for prediction, only upper-bound probe allocation"
+    }
+  }
+}

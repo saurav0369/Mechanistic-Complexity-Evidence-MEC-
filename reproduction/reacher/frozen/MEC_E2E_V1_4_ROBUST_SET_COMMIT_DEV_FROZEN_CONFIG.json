@@ -1,0 +1,137 @@
+{
+  "protocol_id": "MEC_E2E_V1_4_ROBUST_SET_COMMIT_DEV_2026_08_29",
+  "status": "FROZEN_DEVELOPMENT_ONLY_BEFORE_EXECUTION",
+  "predecessor": "MEC_E2E_V1_3_COMPOSITIONAL_VOI_DEV_2026_08_25",
+  "predecessor_disposition": "PRIMARY_FAIL_OOD_COMPOSITION_ONLY",
+  "predecessor_observed_summary": {
+    "wrong_intervention_risk_median": 0.00865817091454273,
+    "coverage_median": 0.9583333333333334,
+    "correct_intervention_rate_median": 0.95,
+    "composite_or_ood_pure_commit_median": 0.13333333333333333,
+    "composite_or_ood_safe_median": 0.8666666666666667,
+    "mec_to_random_probe_cost_ratio_median": 0.6345523591530979,
+    "primary_folds_passed": 1,
+    "efficiency_folds_passed": 8
+  },
+  "scope": "NARROW_REPAIR_OF_PURE_VS_COMPOSITE_OOD_COMMITMENT_ONLY",
+  "environment": "Reacher-v5",
+  "reuse": {
+    "r2_world_model_checkpoint_dir": "/content/drive/MyDrive/MEC_V1_3_R2_CHECKPOINTS",
+    "reuse_world_models": true,
+    "reuse_nominal_residual_normalization": true,
+    "reuse_v13_old_train_feature_records": true,
+    "world_model_retraining_prohibited": true,
+    "theorem_arm": "UNCHANGED_FROM_V1_1",
+    "hidden_unseal": "PROHIBITED"
+  },
+  "development_world_model_seeds": [
+    681101,
+    681102,
+    681103,
+    681104,
+    681105,
+    681106,
+    681107,
+    681108
+  ],
+  "hidden_world_model_seeds_forbidden": [
+    781101,
+    781102,
+    781103,
+    781104,
+    781105,
+    781106,
+    781107,
+    781108
+  ],
+  "hidden_scenario_seeds_forbidden": [
+    957101,
+    957107,
+    957109
+  ],
+  "old_v13_training": {
+    "scenario_seed0": 753001,
+    "group_split_seed": 43117,
+    "use_only_old_train_groups": true
+  },
+  "fresh_v14_qualification": {
+    "scenario_seed0": 764001,
+    "groups": 120,
+    "split_seed": 54217,
+    "calibration_groups": 60,
+    "test_groups": 60,
+    "steps": 40,
+    "fresh_groups_are_never_used_to_fit_base_evidence_heads": true
+  },
+  "head": {
+    "name": "ROBUST_SET_CERTIFICATE_HGB",
+    "mechanism_bits": "four binary HistGradientBoosting heads per evidence stage",
+    "semantic_state": "one 7-state HistGradientBoosting classifier per evidence stage",
+    "semantic_states": [
+      "ENCODER_OFFSET",
+      "MECHANICAL_REFERENCE_SHIFT",
+      "DYNAMICS_DAMPING_FAULT",
+      "ACTUATOR_BIAS",
+      "ENCODER_OFFSET+DYNAMICS_DAMPING_FAULT",
+      "MECHANICAL_REFERENCE_SHIFT+ACTUATOR_BIAS",
+      "OUTSIDE_HULL_MORPHOLOGY"
+    ],
+    "max_iter": 40,
+    "learning_rate": 0.08,
+    "max_leaf_nodes": 15,
+    "l2_regularization": 0.1
+  },
+  "commitment": {
+    "rule": "A pure action is permitted only when the compositional bit heads and semantic-state head jointly certify the same singleton pure mechanism. Otherwise acquire more evidence or escalate.",
+    "certificate_score": "min(top_bit_probability, 1-second_bit_probability, matching_pure_state_probability, 1-nonpure_state_probability)",
+    "calibration": "single scalar certificate threshold per evidence stage",
+    "robustness": "threshold must satisfy one-sided 95% Clopper-Pearson <=5% wrong-pure risk and <=5% nonpure pure-commit rate separately on every source world-model calibration block and pooled source blocks",
+    "selection": "among safe thresholds maximize minimum source-WM pure coverage, then pooled pure coverage",
+    "final_noncertificate": "ESCALATE_MULTI_OR_OOD",
+    "nonfinal_noncertificate": "ACQUIRE_MORE_EVIDENCE"
+  },
+  "probe_policy": {
+    "MEC_VOI": "same v1.3 objective family: predicted mechanism-bit entropy reduction per unit probe cost from passive evidence",
+    "implementation": "lightweight HistGradientBoosting regressors fit only on old v1.3 train groups",
+    "costs": {
+      "static": 2.0,
+      "dynamic": 3.0,
+      "full": 5.0
+    },
+    "random_baseline": "uniform static/dynamic first probe"
+  },
+  "primary_gates": {
+    "wrong_intervention_risk_max": 0.05,
+    "pure_coverage_min": 0.7,
+    "composite_or_ood_pure_commit_max": 0.05,
+    "composite_or_ood_safe_min": 0.95,
+    "fold_passes_required": 6,
+    "of_folds": 8,
+    "median_must_pass": true,
+    "world_model_quality_models_required": 7
+  },
+  "secondary_retention": {
+    "report_v13_reference_wrong_intervention": 0.00865817091454273,
+    "report_v13_reference_coverage": 0.9583333333333334,
+    "report_v13_reference_correct_intervention": 0.95,
+    "report_v13_reference_cost_ratio": 0.6345523591530979,
+    "efficiency_target_ratio_max": 0.85,
+    "efficiency_fold_passes_required": 6,
+    "efficiency_failure_does_not_override_primary": true
+  },
+  "outcome_labels": {
+    "PRIMARY_PASS_EFFICIENCY_PASS": "authorize final v1.4 policy freeze; hidden evaluator may be built next; efficiency claim survives",
+    "PRIMARY_PASS_EFFICIENCY_FAIL": "authorize final v1.4 policy freeze; hidden evaluator may be built next; prohibit efficiency-superiority claim",
+    "PRIMARY_FAIL": "hidden remains sealed; do not tune on v1.4 test groups"
+  },
+  "prohibited": [
+    "hidden world-model seeds",
+    "hidden scenario seeds",
+    "training on held-out world model",
+    "threshold fitting on fresh v1.4 test groups",
+    "retraining world models",
+    "changing v1.1 theorem arm",
+    "rewriting v1.3 failure",
+    "post-hoc relaxation of 5%/70%/95% gates"
+  ]
+}

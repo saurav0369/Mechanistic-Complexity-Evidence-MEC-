@@ -1,0 +1,38 @@
+{
+  "status": "FROZEN_BEFORE_FINAL_POLICY_FIT_R2_AND_HIDDEN_UNSEAL",
+  "created_date": "2026-08-30",
+  "hidden_unsealed": false,
+  "development_disposition": {
+    "quality_models_passed": 8,
+    "primary_folds_passed": 7,
+    "efficiency_folds_passed": 7,
+    "median_wrong_intervention_risk": 0.0,
+    "median_coverage": 0.7645833333333334,
+    "median_composite_or_ood_pure_commit": 0.005555555555555556,
+    "median_composite_or_ood_safe": 0.9944444444444445,
+    "median_cost_ratio": 0.7793228664697653,
+    "decision": "PRIMARY_PASS_EFFICIENCY_PASS"
+  },
+  "finalizer_r1_disposition": {
+    "status": "ABORTED_PRE_HIDDEN",
+    "blocking_stage": "dynamic",
+    "blocking_wm": 681101,
+    "hidden_unsealed": false
+  },
+  "finalizer_r2_rule": "generic nonfinal no-safe-threshold => frozen sentinel/no early commit/full-evidence fallback; full stage must robustly calibrate",
+  "hidden_protocol_id": "MEC_V1_4_REACHER_HIDDEN_FINAL_2026_08_30_R2",
+  "runtime_files_sha256": {
+    "MEC_E2E_V1_FROZEN_CONFIG.json": "1aebd294ea9d7b03b0171a90b6d89b4024e9ccb2da997d9b0560591bc7f8cd26",
+    "MEC_E2E_V1_4_ROBUST_SET_COMMIT_DEV_FROZEN_CONFIG.json": "b6905559f63a0bf4bef895baff11a8cff95135ee2ec4ffe0291012814bfd3ec7",
+    "mec_e2e_v1_runner.py": "e127087b0940149c6508df6cba6510c37b0e52fae31971def9affac299bef002",
+    "mec_e2e_v1_dev_full.py": "1f16adb85cd348a47222223a7e9f76d9d3cf6e1dcf414e07b5b865a0efb7eff3",
+    "mec_e2e_v1_1_realistic_dev.py": "421cb39c482463bda4a55748578e651d1618abb3ba6c92775f491f0f38d65a09",
+    "mec_e2e_v1_3_compositional_voi_dev.py": "9f4ec3cbd8dd10e9a3bb46781b734554fedaf49544bae07f5ef7946817f060ac",
+    "mec_e2e_v1_4_robust_set_commit_dev.py": "255104b8623dfd6fd27c44af95fd57f150fbcd0a44ac0fa1a735afeb2a6bb732",
+    "MEC_V1_4_FINAL_POLICY_FREEZE_R2_CONFIG.json": "17f7d12bc9c8ee4aa2e2fc47fef6eeecd7080e8670c02f5fc11a835b8d5de9bf",
+    "MEC_V1_4_REACHER_HIDDEN_FINAL_R2_FROZEN_CONFIG.json": "f5906c9bd8792b68ef9dab12f224f470728de23ae18e28e2dd5ea7910e8d8f3e",
+    "mec_v14_final_policy_freeze_r2.py": "2d50b6750d2f2181aa6ecffe79a93469c36bd58a03456ccdbc3104896b1c59b6",
+    "mec_v14_reacher_hidden_final_r2.py": "25ffadd398372df35d4c71708bb5aec047951f0e1c7b96953f972d55105f96af"
+  },
+  "note": "R2 changes finalizer governance/acceptance semantics only to match already-frozen v1.4 fallback behavior. Hidden science/gates remain unchanged."
+}

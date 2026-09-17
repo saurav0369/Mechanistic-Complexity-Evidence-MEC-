@@ -1,0 +1,80 @@
+{
+  "protocol_id": "MEC_V1_4_FINAL_POLICY_FREEZE_2026_08_30_R2",
+  "status": "FROZEN_BEFORE_FINAL_POLICY_FIT_R2",
+  "hidden_status": "SEALED",
+  "authorized_by_development_decision": "PRIMARY_PASS_EFFICIENCY_PASS",
+  "development_policy_protocol_id": "MEC_E2E_V1_4_ROBUST_SET_COMMIT_DEV_2026_08_29",
+  "predecessor_finalizer": {
+    "protocol_id": "MEC_V1_4_FINAL_POLICY_FREEZE_2026_08_30",
+    "disposition": "FINALIZER_ABORTED_BEFORE_HIDDEN",
+    "reason": "dynamic stage had no threshold satisfying per-WM plus pooled exact CP constraints for all 8 WMs",
+    "hidden_unsealed": false
+  },
+  "diagnostic": {
+    "pooled_dynamic_safe": true,
+    "source_wms_with_safe_dynamic_threshold": 7,
+    "of_source_wms": 8,
+    "blocking_wm": 681101,
+    "blocking_wm_nearest_tau": 0.778423389667791,
+    "blocking_wm_wrong_ucb": 0.04643845148393823,
+    "blocking_wm_unsafe_ucb": 0.05751495372913514,
+    "blocking_wm_pure_coverage": 0.2625,
+    "interpretation": "narrow exact-confidence finalization failure; no hidden data observed"
+  },
+  "source_checkpoint_dirs": {
+    "r2": "/content/drive/MyDrive/MEC_V1_3_R2_CHECKPOINTS",
+    "v14": "/content/drive/MyDrive/MEC_V1_4_R1_CHECKPOINTS"
+  },
+  "output_dir": "/content/drive/MyDrive/MEC_V1_4_FINAL_FREEZE_R2",
+  "final_fit": {
+    "world_models": [
+      681101,
+      681102,
+      681103,
+      681104,
+      681105,
+      681106,
+      681107,
+      681108
+    ],
+    "head_fit_data": "all 8 development WMs, old v1.3 train groups only",
+    "voi_fit_data": "all 8 development WMs, old v1.3 train groups only",
+    "threshold_calibration_data": "all 8 development WMs, fresh v1.4 calibration groups only",
+    "v14_qualification_test_groups_used": false,
+    "hidden_data_used": false,
+    "old_train_group_split_seed": 43117,
+    "fresh_calibration_split_seed": 54217,
+    "fresh_calibration_groups": 60
+  },
+  "immutable_method": {
+    "head": "ROBUST_SET_CERTIFICATE_HGB",
+    "certificate": "min(top_bit_probability, 1-second_bit_probability, matching_pure_state_probability, 1-nonpure_state_probability)",
+    "calibration": "one-sided 95% Clopper-Pearson <=5% wrong-pure and <=5% nonpure pure-commit for every source WM and pooled",
+    "probe_policy": "MEC_VOI from v1.4",
+    "costs": {
+      "static": 2.0,
+      "dynamic": 3.0,
+      "full": 5.0
+    }
+  },
+  "finalizer_semantics": {
+    "nonfinal_stage_without_robust_threshold": "retain frozen calibrate() sentinel tau=1.000001; that stage cannot commit and deterministically acquires full evidence",
+    "applies_generically_to": [
+      "static",
+      "dynamic"
+    ],
+    "full_stage_without_robust_threshold": "ABORT; hidden not authorized",
+    "threshold_relaxation": false,
+    "new_training_or_calibration_data": false,
+    "policy_family_changed": false,
+    "rationale": "This is the behavior already encoded by v1.4 calibrate(), stage_decision(), and policy(); R1 finalizer incorrectly rejected the sentinel instead of preserving the frozen fallback."
+  },
+  "prohibited": [
+    "v1.4 qualification-test labels in final fit",
+    "hidden seeds/data",
+    "world-model retraining",
+    "threshold relaxation",
+    "new threshold search outside frozen calibrate()",
+    "policy modification after final freeze"
+  ]
+}
