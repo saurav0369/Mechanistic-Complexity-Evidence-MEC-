@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+.DS_Store
+
+# Local experiment outputs and checkpoints
+checkpoints/
+outputs/
+results_local/
+*.pt
+*.pth
+*.pkl
+*.npz
+
+# Hidden/unseal sentinels are runtime artifacts, never source
+HIDDEN_UNSEAL_SENTINEL.json
+PROGRESS_HIDDEN.json
