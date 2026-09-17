@@ -1,0 +1,164 @@
+{
+  "protocol_id": "MEC_IDP_BROAD_SELECTIVE_INTERVENTION_DEV_V0_4C_2026_08_30",
+  "status": "FROZEN_DEVELOPMENT_ONLY_BEFORE_EXECUTION",
+  "environment": "InvertedDoublePendulum-v5",
+  "predecessor": {
+    "threshold_protocol": "MEC_IDP_CONTROL_SLOPE_WM_DEV_V0_3B_2026_08_30",
+    "threshold_result_sha256": "1dae7c6866c1c5237a84c23e73c423bf410a3e201b83edaae04dc61924fac7a7",
+    "threshold_decision": "CONTROL_SLOPE_WM_DEV_PASS",
+    "historical_failed_dynamic_protocol": "MEC_CROSSFAMILY_IDP_WM_THRESHOLD_DEV_V0_2_2026_08_30",
+    "historical_failure_preserved": true
+  },
+  "purpose": "Test a broad cross-WM selective-intervention policy on the declared IDP mechanism family after exact static and dynamic threshold lanes qualified.",
+  "hidden_unseal_authorized": false,
+  "hidden_seeds_forbidden": {
+    "world_model_seeds": "REDACTED_UNSPENT_HOLDOUT",
+    "scenario_roots": "REDACTED_UNSPENT_HOLDOUT"
+  },
+  "world_models": {
+    "reuse_existing_v0_2_nominal_models": true,
+    "development_seeds": [
+      700858,
+      513409,
+      449772,
+      507800,
+      354408,
+      111715,
+      894217,
+      449214
+    ],
+    "count": 8,
+    "retraining_authorized": false,
+    "drive_directory": "MyDrive/MEC_CROSSFAMILY_IDP_WM_THRESHOLD_DEV_V0_2",
+    "required_quality_models": 8
+  },
+  "scenario_family": {
+    "groups": 120,
+    "scenario_root": 537995,
+    "split_seed": 378842,
+    "train_groups": 60,
+    "calibration_groups": 30,
+    "test_groups": 30,
+    "states": [
+      "PURE_HOME_POSITION_ERROR",
+      "PURE_SENSOR_ZERO_OFFSET",
+      "PURE_ACTUATOR_GAIN_ERROR",
+      "PURE_ACTUATOR_ADDITIVE_BIAS",
+      "COMPOSITE_HOME_PLUS_GAIN",
+      "COMPOSITE_SENSOR_PLUS_BIAS",
+      "NONPURE_CART_MASS_SHIFT"
+    ],
+    "pure_states": [
+      "PURE_HOME_POSITION_ERROR",
+      "PURE_SENSOR_ZERO_OFFSET",
+      "PURE_ACTUATOR_GAIN_ERROR",
+      "PURE_ACTUATOR_ADDITIVE_BIAS"
+    ],
+    "nonpure_states": [
+      "COMPOSITE_HOME_PLUS_GAIN",
+      "COMPOSITE_SENSOR_PLUS_BIAS",
+      "NONPURE_CART_MASS_SHIFT"
+    ],
+    "actions": {
+      "PURE_HOME_POSITION_ERROR": "REALIGN_CART_HOME_OR_TRACK_REFERENCE",
+      "PURE_SENSOR_ZERO_OFFSET": "RECALIBRATE_CART_POSITION_SENSOR",
+      "PURE_ACTUATOR_GAIN_ERROR": "RECALIBRATE_ACTUATOR_GAIN",
+      "PURE_ACTUATOR_ADDITIVE_BIAS": "RECALIBRATE_ACTUATOR_ZERO_BIAS"
+    },
+    "parameter_ranges": {
+      "cart_offset_abs": [
+        0.05,
+        0.15
+      ],
+      "u1_abs": [
+        0.08,
+        0.15
+      ],
+      "delta_u_abs": [
+        0.25,
+        0.4
+      ],
+      "gain_multiplier": [
+        1.25,
+        1.5
+      ],
+      "cart_mass_multiplier": [
+        1.35,
+        1.65
+      ],
+      "hinge_pose": [
+        -0.12,
+        0.12
+      ],
+      "hinge_velocity": [
+        -0.15,
+        0.15
+      ],
+      "cart_position": [
+        -0.1,
+        0.1
+      ],
+      "cart_velocity": [
+        -0.15,
+        0.15
+      ],
+      "max_faulty_control_fraction": 0.85
+    }
+  },
+  "evidence": {
+    "PASSIVE": "z-normalized learned-WM residual at the matched first command u1",
+    "STATIC": "PASSIVE + independent physical/world cart-reference measurement",
+    "DYNAMIC": "PASSIVE + centered residual control-slope contrast (z2-z1)/(u2-u1)",
+    "FULL": "PASSIVE + independent cart reference + centered residual control-slope contrast",
+    "costs": {
+      "STATIC": 2.0,
+      "DYNAMIC": 3.0,
+      "FULL": 5.0
+    }
+  },
+  "policy": {
+    "family_selector": "fixed RandomForest trained on PASSIVE to choose STATIC, DYNAMIC, or NONPURE/FULL",
+    "semantic_classifier": "fixed RandomForest 7-state classifier per evidence stage",
+    "partial_commit_rule": "commit only a pure predicted state when its top probability exceeds the source-wise calibrated threshold; otherwise acquire FULL",
+    "passive_nonpure_rule": "PASSIVE never escalates or commits; NONPURE family suspicion acquires FULL",
+    "full_rule": "commit only certified pure; otherwise SAFE_ABSTAIN_OR_ESCALATE",
+    "calibration": "one-sided 95% Clopper-Pearson source-wise and pooled risk constraints",
+    "wrong_pure_commit_ucb_max": 0.05,
+    "nonpure_pure_commit_ucb_max": 0.05,
+    "nonfinal_no_safe_threshold": "disable the partial stage and fall through to FULL",
+    "full_no_safe_threshold": "fold primary failure",
+    "rf": {
+      "n_estimators": 500,
+      "min_samples_leaf": 3,
+      "max_features": "sqrt",
+      "class_weight": "balanced",
+      "random_state": 4401
+    }
+  },
+  "baselines": {
+    "RANDOM_FIRST_PROBE": "deterministically choose STATIC or DYNAMIC with equal probability; same semantic classifiers/thresholds; fall through to FULL",
+    "FULL_EVIDENCE": "always acquire FULL; reporting upper-bound comparator only"
+  },
+  "random_baseline_seed": 191384,
+  "metrics": {
+    "wrong_intervention_risk_max": 0.05,
+    "pure_coverage_min": 0.7,
+    "declared_nonpure_pure_commit_max": 0.05,
+    "declared_nonpure_safe_min": 0.95,
+    "mec_to_random_probe_cost_ratio_max": 0.85
+  },
+  "qualification": {
+    "primary_fold_passes_required": 6,
+    "efficiency_fold_passes_required": 6,
+    "of_folds": 8,
+    "median_primary_metrics_must_pass": true,
+    "median_efficiency_must_pass": true
+  },
+  "decision_rule": {
+    "BROAD_DEV_PRIMARY_EFFICIENCY_PASS": "primary >=6/8 + median pass and efficiency >=6/8 + median ratio <=0.85",
+    "BROAD_DEV_PRIMARY_PASS_EFFICIENCY_FAIL": "primary qualifies but efficiency does not",
+    "BROAD_DEV_PRIMARY_FAIL": "primary does not qualify"
+  },
+  "after_primary_efficiency_pass": "May freeze the final fresh IDP hidden evaluation using the already-committed hidden seeds. Hidden is still not authorized by this config.",
+  "after_failure": "Stop and preserve the broad development failure; do not tune this version in place."
+}

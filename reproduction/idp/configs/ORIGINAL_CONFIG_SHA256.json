@@ -1,0 +1,9 @@
+{
+  "note": "Original development configs are retained privately. Unspent hidden-seed commitments are redacted from the public release; SHA-256 hashes bind these public records to the original frozen files.",
+  "original_sha256": {
+    "MEC_IDP_BROAD_SELECTIVE_INTERVENTION_DEV_V0_4C_CONFIG.json": "0d860ea83ee4e19b1a6b7b5fc5670fc3056d5959d01286fdb60aed9d1acb6fcf",
+    "MEC_CROSSFAMILY_IDP_CART_SEMANTIC_PREFLIGHT_V0_1_CONFIG.json": "09f372e9bae032bb912d489878d199e0bdbf476b0111214573bd853160855053",
+    "MEC_CROSSFAMILY_IDP_WM_THRESHOLD_DEV_V0_2_CONFIG.json": "0bf8e75290e598ff45e647705321060cc180855f7be57e328b15892f440b62fa",
+    "MEC_IDP_CONTROL_SLOPE_WM_DEV_V0_3B_CONFIG.json": "00373e60f0348f76c36ad1d8f146d62cb61742bceaaa213cbe6bcd153211d82d"
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "protocol_id": "MEC_IDP_CONTROL_SLOPE_WM_DEV_V0_3B_2026_08_30",
+  "status": "FROZEN_DEVELOPMENT_ONLY_BEFORE_EXECUTION",
+  "environment": "InvertedDoublePendulum-v5",
+  "predecessor": {
+    "semantic_protocol": "MEC_IDP_CONTROL_SLOPE_SEMANTIC_PREFLIGHT_V0_3A_2026_08_30",
+    "semantic_result_sha256": "b39c35ddfcaba6ff387c17568d5b37004e1bdfd886034bb7af0f844c3896c43b",
+    "semantic_decision": "CONTROL_SLOPE_SEMANTIC_PASS",
+    "failed_prior_dynamic_protocol": "MEC_CROSSFAMILY_IDP_WM_THRESHOLD_DEV_V0_2_2026_08_30",
+    "failed_prior_dynamic_status": "DEVELOPMENT_THRESHOLD_FAIL"
+  },
+  "purpose": "Test whether the new actuator-gain-vs-additive-bias rank geometry survives residualization and transfers across independently trained nominal IDP world models.",
+  "hidden_unseal_authorized": false,
+  "hidden_seeds_forbidden": {
+    "world_model_seeds": "REDACTED_UNSPENT_HOLDOUT",
+    "scenario_roots": "REDACTED_UNSPENT_HOLDOUT"
+  },
+  "world_models": {
+    "reuse_existing_v0_2_nominal_models": true,
+    "development_seeds": [
+      700858,
+      513409,
+      449772,
+      507800,
+      354408,
+      111715,
+      894217,
+      449214
+    ],
+    "count": 8,
+    "retraining_authorized": false,
+    "required_v0_2_quality_models_passed": 8,
+    "drive_directory": "MyDrive/MEC_CROSSFAMILY_IDP_WM_THRESHOLD_DEV_V0_2"
+  },
+  "fresh_pairs": {
+    "pairs": 300,
+    "pair_root": 557642,
+    "group_split_seed": 681241,
+    "train_groups": 210,
+    "test_groups": 90,
+    "hinge_pose_range": [
+      -0.12,
+      0.12
+    ],
+    "hinge_velocity_range": [
+      -0.15,
+      0.15
+    ],
+    "cart_position_range": [
+      -0.1,
+      0.1
+    ],
+    "cart_velocity_range": [
+      -0.15,
+      0.15
+    ],
+    "u1_abs_range": [
+      0.08,
+      0.15
+    ],
+    "delta_u_abs_range": [
+      0.25,
+      0.4
+    ],
+    "gain_multiplier_range": [
+      1.25,
+      1.5
+    ],
+    "u1_and_delta_same_sign": true,
+    "max_fraction_of_actuator_range_used": 0.85
+  },
+  "residualization": {
+    "normalization": "each WM uses its existing v0.2 nominal calibration residual mean/std only",
+    "D1_feature": "z-normalized learned-WM one-step residual at u1",
+    "D2_feature": "centered control-slope contrast (z(u2)-z(u1))/(u2-u1)",
+    "reason": "the new mechanism family is explicitly slope vs intercept in commanded-control space"
+  },
+  "transfer": {
+    "scheme": "leave-one-world-model-out",
+    "source_world_models": 7,
+    "heldout_world_models": 1,
+    "scenario_train_test_disjoint": true,
+    "classifier_hyperparameter_tuning": false,
+    "classifiers": {
+      "RF": {
+        "n_estimators": 500,
+        "min_samples_leaf": 3,
+        "max_features": "sqrt",
+        "class_weight": "balanced",
+        "random_state": 3107
+      },
+      "SVM": {
+        "kernel": "rbf",
+        "C": 10.0,
+        "gamma": "scale",
+        "class_weight": "balanced"
+      }
+    }
+  },
+  "gates": {
+    "inherited_world_model_quality_models": 8,
+    "invalid_pairs_max": 0,
+    "D1_direct_residual_pair_diff_p95_max": 1e-07,
+    "D1_adversarial_best_auc_median_max": 0.65,
+    "D1_fold_passes_min": 7,
+    "D2_direct_residual_pair_diff_p05_min": 0.02,
+    "D2_worst_classifier_auc_median_min": 0.9,
+    "D2_worst_classifier_accuracy_median_min": 0.9,
+    "D2_fold_passes_min": 7
+  },
+  "decision_rule": {
+    "CONTROL_SLOPE_WM_DEV_PASS": "all frozen gates pass",
+    "CONTROL_SLOPE_WM_DEV_FAIL": "any frozen gate fails"
+  },
+  "after_pass": "May proceed to Step 4C broad IDP selective-intervention development. Hidden remains prohibited.",
+  "after_fail": "Stop IDP dynamic cross-family repair attempts; preserve failure and narrow cross-family claims."
+}

@@ -1,0 +1,176 @@
+{
+  "protocol_id": "MEC_CROSSFAMILY_IDP_WM_THRESHOLD_DEV_V0_2_2026_08_30",
+  "status": "FROZEN_DEVELOPMENT_ONLY_BEFORE_EXECUTION",
+  "predecessor_protocol": "MEC_CROSSFAMILY_IDP_CART_SEMANTIC_PREFLIGHT_V0_1_2026_08_30",
+  "predecessor_result_sha256": "a9fc076802e2b624a199d5aad4b000a1fffb5bbf279bd7dfbdad73ef937cd6ac",
+  "environment": "InvertedDoublePendulum-v5",
+  "purpose": "Test whether the Step-4A theorem-aligned IDP semantic geometry survives learned-world-model residualization and transfers across independently trained development world models.",
+  "hidden_unseal_authorized": false,
+  "hidden_seeds_forbidden": {
+    "world_model_seeds": "REDACTED_UNSPENT_HOLDOUT",
+    "scenario_roots": "REDACTED_UNSPENT_HOLDOUT"
+  },
+  "world_models": {
+    "development_seeds": [
+      700858,
+      513409,
+      449772,
+      507800,
+      354408,
+      111715,
+      894217,
+      449214
+    ],
+    "count": 8,
+    "architecture": "Residual MLP 3x128 SiLU",
+    "dtype": "float32",
+    "train_transitions": 80000,
+    "calibration_transitions": 20000,
+    "test_transitions": 20000,
+    "epochs": 80,
+    "batch_size": 512,
+    "optimizer": "AdamW",
+    "learning_rate": 0.002,
+    "weight_decay": 1e-05,
+    "quality_gate": {
+      "models_required": 7,
+      "rmse_vs_persistence_ratio_max": 0.5,
+      "normalized_residual_target_mse_max": 0.25
+    }
+  },
+  "nominal_data": {
+    "seeds": {
+      "train": 756195,
+      "calibration": 254413,
+      "test": 619219
+    },
+    "state_ranges": {
+      "cart_position": [
+        -0.6,
+        0.6
+      ],
+      "hinge_angle": [
+        -0.35,
+        0.35
+      ],
+      "cart_velocity": [
+        -1.0,
+        1.0
+      ],
+      "hinge_velocity": [
+        -1.5,
+        1.5
+      ],
+      "control_fraction": [
+        -0.8,
+        0.8
+      ]
+    },
+    "method": "iid one-step state/action sampling from nominal IDP MuJoCo; no fault labels"
+  },
+  "exact_pairs": {
+    "pairs": 300,
+    "pair_root": 865274,
+    "group_split_seed": 268244,
+    "train_groups": 210,
+    "test_groups": 90,
+    "static": {
+      "name": "CART_HOME_POSITION_ERROR_VS_SENSOR_ZERO",
+      "horizon_steps": 20,
+      "cart_offset_abs_range": [
+        0.05,
+        0.15
+      ],
+      "cart_velocity_abs_max": 0.2,
+      "hinge_pose_range": [
+        -0.12,
+        0.12
+      ],
+      "hinge_velocity_range": [
+        -0.15,
+        0.15
+      ],
+      "control_fraction_range": [
+        -0.35,
+        0.35
+      ],
+      "S0": "z-normalized learned-WM residual trajectory summary only",
+      "S1": "S0 + independent physical/world cart-reference measurement",
+      "actions": [
+        "REALIGN_CART_HOME_OR_TRACK_REFERENCE",
+        "RECALIBRATE_CART_POSITION_SENSOR"
+      ]
+    },
+    "dynamic": {
+      "name": "CART_DAMPING_VS_ACTUATOR_BIAS",
+      "hinge_pose_range": [
+        -0.12,
+        0.12
+      ],
+      "b_abs_range": [
+        0.15,
+        0.45
+      ],
+      "a_abs_range": [
+        0.25,
+        0.65
+      ],
+      "damping_multiplier_range": [
+        1.5,
+        3.0
+      ],
+      "D1": "z-normalized one-step learned-WM residual at matched cart velocity b",
+      "D2": "D1 plus z-normalized residual at second cart velocity b+a with the same actuator bias",
+      "matching_equation": "tau_bias=-(d_fault-d_nominal)*b",
+      "actions": [
+        "SERVICE_CART_DAMPING",
+        "SERVICE_CART_ACTUATOR"
+      ]
+    }
+  },
+  "diagnostic_transfer": {
+    "scheme": "leave-one-world-model-out",
+    "source_world_models": 7,
+    "target_world_models": 1,
+    "scenario_leakage_rule": "classifier training uses only frozen train groups; held-out WM evaluation uses only disjoint frozen test groups",
+    "normalization": "each WM uses only its own nominal calibration residual mean/std; no fault labels",
+    "classifiers": {
+      "RF": {
+        "n_estimators": 500,
+        "min_samples_leaf": 3,
+        "max_features": "sqrt",
+        "class_weight": "balanced",
+        "random_state": 1701
+      },
+      "SVM": {
+        "kernel": "rbf",
+        "C": 10.0,
+        "gamma": "scale",
+        "class_weight": "balanced"
+      }
+    },
+    "hyperparameter_tuning": false
+  },
+  "gates": {
+    "quality_models_passed_min": 7,
+    "static_pair_residual_diff_p95_max": 1e-08,
+    "static_S0_adversarial_best_auc_median_max": 0.65,
+    "static_S0_fold_passes_min": 7,
+    "static_S1_worst_classifier_auc_median_min": 0.9,
+    "static_S1_fold_passes_min": 7,
+    "static_structured_action_accuracy_min": 0.99,
+    "dynamic_D1_pair_residual_diff_p95_max": 0.005,
+    "dynamic_D1_adversarial_best_auc_median_max": 0.65,
+    "dynamic_D1_fold_passes_min": 7,
+    "dynamic_D2_worst_classifier_auc_median_min": 0.9,
+    "dynamic_D2_worst_classifier_accuracy_median_min": 0.9,
+    "dynamic_D2_fold_passes_min": 7,
+    "invalid_pair_count_max": 0
+  },
+  "decision_rule": {
+    "DEVELOPMENT_THRESHOLD_PASS": "all frozen gates pass",
+    "DEVELOPMENT_THRESHOLD_FAIL": "any frozen gate fails; preserve failure, do not build hidden evaluator"
+  },
+  "after_pass": "May design/freeze Step 4C broad cross-WM selective-intervention development. Hidden remains prohibited.",
+  "after_fail": "Do not tune this protocol in place. Record failure and issue a prospective new version if a scientifically justified repair exists."
+}

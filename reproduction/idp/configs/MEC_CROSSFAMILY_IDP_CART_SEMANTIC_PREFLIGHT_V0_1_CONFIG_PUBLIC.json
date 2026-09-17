@@ -1,0 +1,90 @@
+{
+  "protocol_id": "MEC_CROSSFAMILY_IDP_CART_SEMANTIC_PREFLIGHT_V0_1_2026_08_30",
+  "status": "FROZEN_DEVELOPMENT_SEMANTIC_PREFLIGHT_ONLY",
+  "environment": "InvertedDoublePendulum-v5",
+  "purpose": "Verify an executable second-family MEC threshold geometry before any learned-world-model or hidden cross-family run.",
+  "predecessor_fact": "Old IDP mechanical-reference-vs-encoder construction was development-disqualified because the mechanical reference perturbation changed physical rollout semantics.",
+  "hidden_unseal_authorized": false,
+  "no_world_model_training": true,
+  "no_classifier_training": true,
+  "semantic_lanes": {
+    "static": {
+      "name": "IDP_CART_ORIGIN_VS_SENSOR_ZERO",
+      "dimension": 1,
+      "world_A": "physical cart origin/home displacement c with unbiased sensor",
+      "world_B": "nominal physical cart position with cart-position sensor zero offset c",
+      "same_channel_requirement": "open-loop observed generalized state trajectories must match below the independent physical-reference probe",
+      "resolving_probe": "independent world/track position reference reveals physical cart displacement",
+      "action_A": "REALIGN_CART_HOME_OR_TRACK_REFERENCE",
+      "action_B": "RECALIBRATE_CART_POSITION_SENSOR"
+    },
+    "dynamic": {
+      "name": "IDP_CART_DAMPING_VS_ACTUATOR_BIAS",
+      "dimension": 1,
+      "world_A": "cart-slide damping increase",
+      "world_B": "fixed cart actuator bias chosen to match the damping perturbation at velocity b",
+      "D1": "one cart-velocity operating point v=b",
+      "D2": "add second point v=b+a while keeping the same actuator bias",
+      "matching_equation": "tau_bias = -(d_fault-d_nominal)*b",
+      "actions": [
+        "SERVICE_CART_DAMPING",
+        "SERVICE_CART_ACTUATOR"
+      ]
+    }
+  },
+  "development": {
+    "pairs": 300,
+    "roots": [
+      505970,
+      438077,
+      287942
+    ],
+    "static_horizon_steps": 20,
+    "cart_origin_abs_range": [
+      0.05,
+      0.15
+    ],
+    "cart_velocity_abs_max": 0.2,
+    "hinge_pose_range": [
+      -0.12,
+      0.12
+    ],
+    "hinge_velocity_range": [
+      -0.15,
+      0.15
+    ],
+    "control_fraction_range": [
+      -0.35,
+      0.35
+    ],
+    "dynamic_b_range": [
+      0.15,
+      0.45
+    ],
+    "dynamic_a_range": [
+      0.25,
+      0.65
+    ],
+    "cart_damping_multiplier_range": [
+      1.5,
+      3.0
+    ]
+  },
+  "gates": {
+    "static_same_channel_absmax_max": 1e-08,
+    "static_reference_separation_min": 0.04,
+    "static_no_invalid_pairs": true,
+    "dynamic_D1_qacc_pair_diff_p95_max": 1e-08,
+    "dynamic_D2_added_point_qacc_diff_p05_min": 0.0001,
+    "dynamic_no_invalid_pairs": true,
+    "all_matching_controls_within_bounds": true
+  },
+  "future_hidden_commitment": {
+    "status": "COMMITTED_BUT_NOT_AUTHORIZED_OR_SPENT",
+    "derivation": "SHA256(protocol_id|tag) deterministic seed derivation; no result-dependent seed selection.",
+    "world_model_seeds": "REDACTED_UNSPENT_HOLDOUT",
+    "scenario_roots": "REDACTED_UNSPENT_HOLDOUT"
+  },
+  "if_preflight_fails": "Do not train cross-family WMs and do not use future hidden seeds. Preserve this failure and redesign under a new protocol ID.",
+  "if_preflight_passes": "Authorize only a development learned-world-model cross-family qualification. Hidden remains prohibited until that later development protocol passes."
+}
